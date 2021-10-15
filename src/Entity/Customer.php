@@ -25,14 +25,19 @@ class Customer
     private $name;
 
     /**
-     * @ORM\Column(type="boolean")
-     */
-    private $authorization;
-
-    /**
      * @ORM\OneToMany(targetEntity=User::class, mappedBy="customer")
      */
     private $users;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $username;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $password;
 
     public function __construct()
     {
@@ -56,17 +61,6 @@ class Customer
         return $this;
     }
 
-    public function getAuthorization(): ?bool
-    {
-        return $this->authorization;
-    }
-
-    public function setAuthorization(bool $authorization): self
-    {
-        $this->authorization = $authorization;
-
-        return $this;
-    }
 
     /**
      * @return Collection|User[]
@@ -94,6 +88,30 @@ class Customer
                 $user->setCustomer(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): self
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
 
         return $this;
     }

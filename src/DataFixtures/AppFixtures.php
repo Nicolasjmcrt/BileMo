@@ -22,7 +22,9 @@ class AppFixtures extends Fixture
             $product = new Product;
             $product->setName($faker->deviceModelName)
                 ->setDescription($faker->sentence())
-                ->setPrice($faker->price(650, 1299))
+                ->setReference($faker->deviceSerialNumber)
+                ->setVat(20.00)
+                ->setPrice($faker->price(650.00, 1299.00))
                 ->setCreationDate(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-2 weeks', '-1 days')))
                 ->setQuantity(mt_rand(8, 27));
 
