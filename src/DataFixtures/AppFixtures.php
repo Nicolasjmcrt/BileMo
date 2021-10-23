@@ -3,9 +3,11 @@
 namespace App\DataFixtures;
 
 use Faker\Factory;
+use App\Entity\User;
 use DateTimeImmutable;
 use App\Entity\Product;
 use Liior\Faker\Prices;
+use App\Entity\Customer;
 use Bezhanov\Faker\Provider\Device;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -30,6 +32,28 @@ class AppFixtures extends Fixture
 
             $manager->persist($product);
 
+        }
+
+        for ($c=0; $c < 2; $c++) { 
+            $customer = new Customer;
+            $customer->setName($faker->company())
+                ->setUserName($faker->userName())
+                ->setPassword($faker->password());
+
+            $manager->persist($customer);
+
+            for ($u=0; $u < mt_rand(3, 7); $u++) { 
+                $user = new User;
+                $user->setUsername($faker->userName())
+                    ->setPassword($faker->password())
+                    ->setFirstName($faker->firstName())
+                    ->setLastName($faker->lastName())
+                    ->setEmail($faker->email())
+                    ->setCreationDate(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-1 weeks', '-1 days')))
+                    ->setCustomer($customer);
+
+                $manager->persist($user);
+            }
         }
 
         $manager->flush();

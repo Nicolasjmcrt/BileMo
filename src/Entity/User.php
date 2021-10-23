@@ -2,10 +2,12 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use App\Repository\UserRepository;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
@@ -16,48 +18,61 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups("users:read")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
+     * @Groups("users:read")
+     * @Assert\NotBlank(message="Le username est obligatoire")
      */
     private $username;
 
     /**
      * @ORM\Column(type="json")
+     * @Groups("users:read")
      */
     private $roles = [];
 
     /**
      * @var string The hashed password
      * @ORM\Column(type="string")
+     * @Assert\NotBlank(message="Le password est obligatoire")
      */
     private $password;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups("users:read")
+     * @Assert\NotBlank(message="Le firstname est obligatoire")
      */
     private $first_name;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups("users:read")(message="Le lastname est obligatoire")
      */
     private $last_name;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups("users:read")
+     * @Assert\NotBlank(message="L'email est obligatoire")
      */
     private $email;
 
     /**
      * @ORM\ManyToOne(targetEntity=Customer::class, inversedBy="users")
      * @ORM\JoinColumn(nullable=false)
+     * @Groups("users:read")
+     * @Assert\NotBlank(message="Le customer est obligatoire")
      */
     private $customer;
 
     /**
      * @ORM\Column(type="datetime")
+     * @Groups("users:read")
      */
     private $creation_date;
 
