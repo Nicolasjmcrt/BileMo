@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Customer;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Repository\CustomerRepository;
@@ -32,32 +33,21 @@ class UserController extends AbstractController
 
 
     /**
-     * @Route("/api/customers/{id}/users/", name ="customer_user_details", methods={"GET"})
+     * @Route("/api/customers/{id}/users/{user_id}", name ="customer_user_details", methods={"GET"})
      */
-    public function customer_user_details($id, UserRepository $userRepository, CustomerRepository $customerRepository)
+    public function customer_user_details($id, $user_id, UserRepository $userRepository, CustomerRepository $customerRepository)
     {
-        $customer = $customerRepository->findOneBy([
-            'id' => $id
-        ]);
-
-        $customerId = $customer->getId();
-
-        $users = $userRepository->findByCustomer($customerId);
 
         $user = $userRepository->findOneBy([
-            'id' => $id
+            'id' => $user_id,
+            'customer' => $id
         ]);
-
-        // $userId = $user->getId();
-
-        dump($user);
-        exit();
     }
 
     /**
      * @Route("/api/customers/{id}/users", name="api_users_add", methods={"POST"})
      */
-    public function add($id, Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator)
+    public function add($id, Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator, CustomerRepository $customerRepository)
     {
 
         $jsonData = $request->getContent();
@@ -65,13 +55,18 @@ class UserController extends AbstractController
         try {
             $user = $serializer->deserialize($jsonData, User::class, 'json');
 
-
-
             $user->setPassword("password");
             $user->setCreationDate(new \DateTime());
-            // $user->setCustomer(6);
+
+            $customer = $customerRepository->findOneBy([
+                'id' => $id
+            ]);
+            $user->setCustomer($customer);
 
             $errors = $validator->validate($user);
+
+            dump($errors);
+            exit();
 
             if (count($errors) > 0) {
                 return $this->json($errors, 400);
@@ -87,5 +82,22 @@ class UserController extends AbstractController
                 'message' => $e->getMessage()
             ], 400);
         }
+    }
+
+    /**
+     * @Route("/api/customers/{id}/users/{user_id}", name="delete_user", methods={"DELETE"})
+     */
+    public function delete($id, $user_id, UserRepository $userRepository, EntityManagerInterface $em)
+    {
+        $user = $userRepository->findOneBy([
+            'id' => $user_id,
+            'customer' => $id
+        ]);
+
+        if ($user) {
+            $em->remove($user);
+            $em->flush();
+        }
+
     }
 }

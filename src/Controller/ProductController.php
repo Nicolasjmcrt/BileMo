@@ -17,8 +17,6 @@ class ProductController extends AbstractController
         return $this->json($productRepository->findAll(), 200, []);
     }
 
-
-
     /**
      * @Route("/api/products/{id}", name="show_product", methods={"GET"})
      */
