@@ -14,6 +14,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/orm": "^2.10",
         "fakerphp/faker": "^1.16",
+        "friendsofsymfony/rest-bundle": "^3.1",
         "liorchamla/faker-prices": "^2.0",
         "mbezhanov/faker-provider-collection": "^2.0",
         "phpdocumentor/reflection-docblock": "^5.3",
