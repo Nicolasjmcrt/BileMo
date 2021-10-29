@@ -1,0 +1,17 @@
+nelmio_api_doc:
+    documentation:
+        servers:
+            - url:https://localhost:8000/
+        info:
+            title: BileMo
+            description: This is an awesome app!
+            version: 1.0.0
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+    areas: # to filter documented areas
+        path_patterns:
+            - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
