@@ -3,4 +3,4 @@
 #    controller: App\Controller\TestController::index
 
 api_login_check:
-   path: /api/login_check
+   path: /api/login
