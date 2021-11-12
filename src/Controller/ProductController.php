@@ -98,6 +98,11 @@ class ProductController extends AbstractFOSRestController
      */
     public function show($id, ProductRepository $productRepository)
     {
-        return $this->json($productRepository->findOneBy(['id' => $id]), 200, []);
+        $product = $productRepository->findOneBy(['id' => $id]);
+
+        if ($product) {
+            return $this->json($product, 200, []);
+        }
+        return $this->json("Product not found", 404, []);
     }
 }

@@ -65,6 +65,9 @@ class UserController extends AbstractFOSRestController
      *     response=401,
      *     description="The JWT Token is invalid."
      * )
+     * @OA\Response(
+     *      response=403,
+     *      description="customer not found")
      */
     public function customer_users_list($id, UserRepository $userRepository, CustomerRepository $customerRepository, SerializerInterface $serializer)
     {
@@ -73,8 +76,13 @@ class UserController extends AbstractFOSRestController
             'id' => $id
         ]);
 
-        $customerId = $customer->getId();
+        
 
+        if (!$customer) {
+            return $this->json("Customer not found", 403, []);
+        }
+
+        $customerId = $customer->getId();
         return $this->json($userRepository->findByCustomer($customerId), 200, [], ['groups' => 'users:read']);
     }
 
@@ -119,6 +127,10 @@ class UserController extends AbstractFOSRestController
             'customer' => $id
         ]);
 
+        if (!$user) {
+            return $this->json("User not found", 404, []);
+        }
+
         return $this->json($user, 200, [], ['groups' => 'users:read']); 
     }
 
@@ -155,9 +167,14 @@ class UserController extends AbstractFOSRestController
      *     description="The JWT Token is invalid."
      * )
      * 
-     * * @OA\Response(
+     * @OA\Response(
      *     response=400,
      *     description="Invalid data."
+     * )
+     * 
+     * @OA\Response(
+     *     response=403,
+     *     description="Customer not found."
      * )
      */
     public function add($id, Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator, CustomerRepository $customerRepository)
@@ -174,6 +191,9 @@ class UserController extends AbstractFOSRestController
             $customer = $customerRepository->findOneBy([
                 'id' => $id
             ]);
+            if (!$customer) {
+                return $this->json("Customer not found", 403, []);
+            }
             $user->setCustomer($customer);
 
             $errors = $validator->validate($user);
@@ -222,8 +242,8 @@ class UserController extends AbstractFOSRestController
      * )
      * 
      * * @OA\Response(
-     *     response=403,
-     *     description="Acces denied."
+     *     response=404,
+     *     description="Customer not found."
      * )
      */
     public function delete($id, $user_id, UserRepository $userRepository, EntityManagerInterface $em)
@@ -232,6 +252,10 @@ class UserController extends AbstractFOSRestController
             'id' => $user_id,
             'customer' => $id
         ]);
+
+        if (!$id) {
+            return $this->json("Customer not found", 404, []);
+        }
 
         if ($user) {
             $em->remove($user);
