@@ -84,7 +84,7 @@ class ProductController extends AbstractFOSRestController
      * )
      * @OA\Response(
      *     response=200,
-     *     description="Productr detail",
+     *     description="Product detail",
      *     @OA\JsonContent(ref=@Model(type=Product::class)),
      * )
      * @OA\Response(

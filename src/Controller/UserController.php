@@ -22,9 +22,16 @@ use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserController extends AbstractFOSRestController
 {
+
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher)
+    {
+        $this->userPasswordHasher = $userPasswordHasher;
+    }
+    
     /**
      * @Route("/api/customers/{id}/users", name="customer_users_list", methods={"GET"})
      * 
@@ -185,7 +192,8 @@ class UserController extends AbstractFOSRestController
         try {
             $user = $serializer->deserialize($jsonData, User::class, 'json');
 
-            $user->setPassword("password");
+            $password = $this->userPasswordHasher->hashPassword($user, 'password');
+            $user->setPassword($password);
             $user->setCreationDate(new \DateTime());
 
             $customer = $customerRepository->findOneBy([
