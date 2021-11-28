@@ -1,13 +1,19 @@
 # BileMo
+
 API project (# 7) for OC training
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
+
 #### PREREQUISITES
-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+---
+
 Make sure you have Composer installed on your machine
 
 #### INSTALLATION
-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+---
+
 **Download or clone**
 
 Download zip files or clone the project repository with github => [see GitHub documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
@@ -15,12 +21,14 @@ Download zip files or clone the project repository with github => [see GitHub do
 **Configure environment**
 
 Create an .env.local file at the root of the project and copy this content:
+
 ```
 # .env.local
 DATABASE_URL="mysql://root:root@localhost:3306/bilemo?serverVersion=5.7"
 APP_ENV=dev
 ```
-*Content should be edited according to user needs*
+
+_Content should be edited according to user needs_
 
 **Install the project**
 
@@ -32,6 +40,7 @@ In your cmd, go to the directory where you want to install the project and insta
 $ cd your\directory
 $ composer update
 ```
+
 Dependencies should be installed in your project.
 
 In MacOS, please do the following:
@@ -49,7 +58,7 @@ doctrine:
 
 **Create the database**
 
-1. In the terminal, enter the following command to create the database : 
+1. In the terminal, enter the following command to create the database :
 
 ```
 $ php bin/console doctrine:database:create
@@ -83,8 +92,4 @@ $ symfony serve
 
 7. And finally, enter the following url to use the API documentation : https://localhost:8000/api/doc
 
-
 ## Ready to go
-
-
-
