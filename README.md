@@ -1,5 +1,7 @@
 # BileMo
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/009227705ac24e0e84f8408f4a83412b)](https://app.codacy.com/gh/Nicolasjmcrt/BileMo?utm_source=github.com&utm_medium=referral&utm_content=Nicolasjmcrt/BileMo&utm_campaign=Badge_Grade_Settings)
+
 API project (# 7) for OC training
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
