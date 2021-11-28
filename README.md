@@ -2,18 +2,16 @@
 
 API project (# 7) for OC training
 
----
+------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #### PREREQUISITES
 
----
-
+------------------------------------------------------------------------------------------------------------------------------------------------------------
 Make sure you have Composer installed on your machine
 
 #### INSTALLATION
 
----
-
+------------------------------------------------------------------------------------------------------------------------------------------------------------
 **Download or clone**
 
 Download zip files or clone the project repository with github => [see GitHub documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
@@ -28,7 +26,7 @@ DATABASE_URL="mysql://root:root@localhost:3306/bilemo?serverVersion=5.7"
 APP_ENV=dev
 ```
 
-_Content should be edited according to user needs_
+*Content should be edited according to user needs*
 
 **Install the project**
 
@@ -58,7 +56,7 @@ doctrine:
 
 **Create the database**
 
-1. In the terminal, enter the following command to create the database :
+1. In the terminal, enter the following command to create the database : 
 
 ```
 $ php bin/console doctrine:database:create
