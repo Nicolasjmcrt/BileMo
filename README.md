@@ -6,19 +6,19 @@ API project (# 7) for OC training
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#### PREREQUISITES
+## PREREQUISITES
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
 Make sure you have Composer installed on your machine
 
-#### INSTALLATION
+## INSTALLATION
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
-#### Download or clone
+### Download or clone
 
 Download zip files or clone the project repository with github => [see GitHub documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
 
-#### Configure environment
+### Configure environment
 
 Create an .env.local file at the root of the project and copy this content:
 
@@ -30,7 +30,7 @@ APP_ENV=dev
 
 ###### Content should be edited according to user needs
 
-#### Install the project
+### Install the project
 
 If necessary, install Composer by following the [instructions](https://getcomposer.org/download/)
 
@@ -56,7 +56,7 @@ doctrine:
         unix_socket: /Applications/MAMP/tmp/mysql/mysql.sock
 ```
 
-#### Create the database
+### Create the database
 
 1 In the terminal, enter the following command to create the database : 
 
