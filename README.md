@@ -58,13 +58,13 @@ doctrine:
 
 **Create the database**
 
- 1. In the terminal, enter the following command to create the database : 
+1 In the terminal, enter the following command to create the database : 
 
 ```
 $ php bin/console doctrine:database:create
 ```
 
- 2. Create database structure with migrations:
+2 Create database structure with migrations:
 
 ```
 $ php bin/console doctrine:migration:migrate
@@ -72,24 +72,24 @@ $ php bin/console doctrine:migration:migrate
 
 For more realistic and current data, replace the Device.php file found in vendor / mbezahanov / faker-provider-collection / src / Faker / Provider by the one found in the "mbezhanov" folder at the root of the project.
 
- 3. Then import the data into the tables with this command:
+3 Then import the data into the tables with this command:
 
 ```
 $ php bin/console doctrine:fixtures:load --no-interaction
 ```
 
- 4. Generate the SSL Keys with this command :
+4 Generate the SSL Keys with this command :
 
 ```
 $ php bin/console lexik:jwt:generate-keypair
 ```
 
- 5. Start the Symfony server to launch the application with the command:
+5 Start the Symfony server to launch the application with the command:
 
 ```
 $ symfony serve
 ```
 
- 6. And finally, enter the following url to use the API documentation : https://localhost:8000/api/doc
+6 And finally, enter the following url to use the API documentation : https://localhost:8000/api/doc
 
 ## Ready to go
