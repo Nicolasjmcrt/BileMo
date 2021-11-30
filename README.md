@@ -28,7 +28,7 @@ DATABASE_URL="mysql://root:root@localhost:3306/bilemo?serverVersion=5.7"
 APP_ENV=dev
 ```
 
-###### Content should be edited according to user needs
+#### Content should be edited according to user needs
 
 ### Install the project
 
