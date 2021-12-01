@@ -2,11 +2,30 @@
 
 namespace App\Entity;
 
-use App\Repository\ProductRepository;
+use Hateoas\Configuration\Annotation as Hateoas;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\ProductRepository;
+use JMS\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=ProductRepository::class)
+ * @Hateoas\Relation(
+ *      name = "all",
+ *      href = @Hateoas\Route(
+ *          "show_product",
+ *          absolute = true
+ *      ),
+ *      attributes = {"actions": {"read": "GET"}}
+ * )
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "products",
+ *          parameters = { "id" = "expr(object.getId())" },
+ *          absolute = true
+ *      ),
+ *      attributes = {"actions": {"read": "GET"}}
+ * )
  */
 class Product
 {

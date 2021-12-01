@@ -2,15 +2,39 @@
 
 namespace App\Entity;
 
+use Hateoas\Configuration\Annotation as Hateoas;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\UserRepository;
-use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @Hateoas\Relation(
+ *      name = "all",
+ *      href = @Hateoas\Route(
+ *          "customer_users_list",
+ *          absolute = true
+ *      ),
+ *      attributes = {"actions": {"read": "GET"}}
+ * )
+ * @Hateoas\Relation(
+ *      name = "self",
+ *      href = @Hateoas\Route(
+ *          "customer_user_details",
+ *          parameters = {
+ *              "id" = "expr(object.getCustomer())"
+ *          },
+ *          parameters = {
+ *              "user_id" = "expr(object.getId())"
+ *          },
+ *          absolute = true
+ *      ),
+ *      attributes = {"actions": {"read": "GET", "add": "POST", "delete": "DELETE"}},
+ *      exclusion = @Hateoas\Exclusion(groups = {"users:read"})
+ * )
  */
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {

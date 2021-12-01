@@ -33,6 +33,8 @@ class UserController extends AbstractFOSRestController
     }
     
     /**
+     * Return users list from a customer
+     * 
      * @Route("/api/customers/{id}/users", name="customer_users_list", methods={"GET"})
      * 
      * * @QueryParam(
@@ -76,9 +78,11 @@ class UserController extends AbstractFOSRestController
      *      response=403,
      *      description="customer not found")
      */
-    public function customer_users_list($id, UserRepository $userRepository, CustomerRepository $customerRepository, SerializerInterface $serializer)
+    public function customer_users_list($id, UserRepository $userRepository, CustomerRepository $customerRepository, ParamFetcher $paramFetcher)
     {
 
+        $offset = $paramFetcher->get('offset');
+        $limit = $paramFetcher->get('limit');
         $customer = $customerRepository->findOneBy([
             'id' => $id
         ]);
@@ -90,11 +94,13 @@ class UserController extends AbstractFOSRestController
         }
 
         $customerId = $customer->getId();
-        return $this->json($userRepository->findByCustomer($customerId), 200, [], ['groups' => 'users:read']);
+        return $this->json($userRepository->findByCustomer($customerId, $limit, $offset), 200, [], ['groups' => 'users:read']);
     }
 
 
     /**
+     * Returns the user details of a customer
+     * 
      * @Route("/api/customers/{id}/users/{user_id}", name ="customer_user_details", methods={"GET"})
      * 
      * @OA\Tag(name="User")
@@ -142,6 +148,8 @@ class UserController extends AbstractFOSRestController
     }
 
     /**
+     * Add a new user for a customer
+     * 
      * @Route("/api/customers/{id}/users", name="api_users_add", methods={"POST"})
      * 
      * @OA\Tag(name="User")
@@ -223,6 +231,8 @@ class UserController extends AbstractFOSRestController
     }
 
     /**
+     * Removes a user from a customer
+     * 
      * @Route("/api/customers/{id}/users/{user_id}", name="delete_user", methods={"DELETE"})
      * 
      * @OA\Tag(name="User")

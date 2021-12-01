@@ -72,6 +72,8 @@ class ProductController extends AbstractFOSRestController
     }
 
     /**
+     * Returns the details of a product
+     * 
      * @Route("/api/products/{id}", name="show_product", methods={"GET"})
      *
      * @OA\Tag(name="Product")
