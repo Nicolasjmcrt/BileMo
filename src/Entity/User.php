@@ -2,10 +2,11 @@
 
 namespace App\Entity;
 
-use Hateoas\Configuration\Annotation as Hateoas;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\UserRepository;
-use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Exclude;
+use JMS\Serializer\Annotation as Serializer;
+use Hateoas\Configuration\Annotation as Hateoas;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -13,27 +14,33 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
  * @Hateoas\Relation(
- *      name = "all",
- *      href = @Hateoas\Route(
- *          "customer_users_list",
- *          absolute = true
- *      ),
- *      attributes = {"actions": {"read": "GET"}}
- * )
- * @Hateoas\Relation(
  *      name = "self",
  *      href = @Hateoas\Route(
  *          "customer_user_details",
  *          parameters = {
- *              "id" = "expr(object.getCustomer())"
- *          },
- *          parameters = {
- *              "user_id" = "expr(object.getId())"
+ *              "id" = "expr(object.getCustomer().getId())", "user_id" = "expr(object.getId())"
  *          },
  *          absolute = true
  *      ),
- *      attributes = {"actions": {"read": "GET", "add": "POST", "delete": "DELETE"}},
- *      exclusion = @Hateoas\Exclusion(groups = {"users:read"})
+ *      attributes = {"actions": { "read": "GET", "post": "POST", "delete": "DELETE" }},
+ *      exclusion = @Hateoas\Exclusion(groups = {"SHOW_USER", "LIST_USER"})
+ * )
+ * @Hateoas\Relation(
+ *      name = "all",
+ *      href = @Hateoas\Route(
+ *          "users_list",
+ *          parameters = {
+ *              "id" = "expr(object.getCustomer().getId())"
+ *          },
+ *          absolute = true
+ *      ),
+ *      attributes = {"actions": { "read": "GET" }},
+ *      exclusion = @Hateoas\Exclusion(groups = {"SHOW_USER"})
+ * )
+ * @Hateoas\Relation(
+ *      "customer",
+ *      embedded = @Hateoas\Embedded("expr(object.getCustomer())"),
+ *      exclusion = @Hateoas\Exclusion(groups = {"SHOW_USER", "LIST_USER"})
  * )
  */
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -42,20 +49,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups("users:read")
+     * @Serializer\Groups({"SHOW_USER", "LIST_USER"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
-     * @Groups("users:read")
+     * @Serializer\Groups({"SHOW_USER", "LIST_USER"})
      * @Assert\NotBlank(message="Le username est obligatoire")
      */
     private $username;
 
     /**
      * @ORM\Column(type="json")
-     * @Groups("users:read")
      */
     private $roles = [];
 
@@ -68,35 +74,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups("users:read")
+     * @Serializer\Groups({"SHOW_USER"})
      * @Assert\NotBlank(message="Le firstname est obligatoire")
      */
     private $first_name;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups("users:read")(message="Le lastname est obligatoire")
+     * @Serializer\Groups({"SHOW_USER"})
+     * @Assert\NotBlank(message="Le lastname est obligatoire")
      */
     private $last_name;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups("users:read")
+     * @Serializer\Groups({"SHOW_USER"})
      * @Assert\NotBlank(message="L'email est obligatoire")
      */
     private $email;
 
     /**
      * @ORM\ManyToOne(targetEntity=Customer::class, inversedBy="users")
+     * @Serializer\Exclude
      * @ORM\JoinColumn(nullable=false)
-     * @Groups("users:read")
      * @Assert\NotBlank(message="Le customer est obligatoire")
      */
     private $customer;
 
     /**
      * @ORM\Column(type="datetime")
-     * @Groups("users:read")
+     * @Serializer\Groups({"SHOW_USER"})
      */
     private $creation_date;
 

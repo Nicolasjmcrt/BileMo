@@ -3,41 +3,49 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Customer;
+use App\Representation\Users;
 use OpenApi\Annotations as OA;
 use App\Repository\UserRepository;
 use App\Repository\ProductRepository;
 use App\Repository\CustomerRepository;
+use JMS\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Request\ParamFetcher;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\View;
 use Symfony\Component\Routing\Annotation\Route;
 use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\Controller\Annotations\QueryParam;
-use Symfony\Component\Serializer\SerializerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserController extends AbstractFOSRestController
 {
+    private $serializer;
 
-    public function __construct(UserPasswordHasherInterface $userPasswordHasher)
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher, SerializerInterface $serializer)
     {
         $this->userPasswordHasher = $userPasswordHasher;
+        $this->serializer = $serializer;
     }
+
+    
     
     /**
      * Return users list from a customer
      * 
-     * @Route("/api/customers/{id}/users", name="customer_users_list", methods={"GET"})
+     * @Route("/api/customers/{id}/users", name="users_list", methods={"GET"})
      * 
-     * * @QueryParam(
+     * @QueryParam(
      *     name="offset",
      *     requirements="\d+",
      *     default="0",
@@ -49,7 +57,7 @@ class UserController extends AbstractFOSRestController
      *     default="5",
      *     description="Maximum user per page."
      * )
-     *
+     * @View(serializergroups={"LIST_USER"})
      * @OA\Tag(name="User")
      * @Security(name="Bearer")
      * @OA\Parameter(
@@ -67,7 +75,7 @@ class UserController extends AbstractFOSRestController
      *     description="Return the list of the users.",
      *     @OA\JsonContent(
      *         type="array",
-     *         @OA\Items(ref=@Model(type=User::class))
+     *         @OA\Items(ref=@Model(type=User::class, groups={"LIST_USER"}))
      *     )
      * )
      * @OA\Response(
@@ -75,26 +83,35 @@ class UserController extends AbstractFOSRestController
      *     description="The JWT Token is invalid."
      * )
      * @OA\Response(
-     *      response=403,
+     *      response=404,
      *      description="customer not found")
      */
-    public function customer_users_list($id, UserRepository $userRepository, CustomerRepository $customerRepository, ParamFetcher $paramFetcher)
+    public function customer_users_list(Customer $customer, ParamFetcher $paramFetcher, UserRepository $userRepository )
     {
 
+
+        
         $offset = $paramFetcher->get('offset');
         $limit = $paramFetcher->get('limit');
-        $customer = $customerRepository->findOneBy([
-            'id' => $id
-        ]);
+
+        $users = $userRepository->findByCustomer($customer->getId(), [], $limit, $offset);
+
+        return new Users($users);
+        // if (!$customer) {
+        //     return $this->json("Customer not found", 403, []);
+        // }
+
+        if (!$customer) {
+            throw new NotFoundHttpException("The customer was not found");
+        }
+
+      
 
         
 
-        if (!$customer) {
-            return $this->json("Customer not found", 403, []);
-        }
+        // return $this->json($userRepository->findByCustomer($customerId), 200, [], ['groups' => 'users:read']);
 
-        $customerId = $customer->getId();
-        return $this->json($userRepository->findByCustomer($customerId, $limit, $offset), 200, [], ['groups' => 'users:read']);
+        return new Users($users);
     }
 
 
@@ -102,7 +119,8 @@ class UserController extends AbstractFOSRestController
      * Returns the user details of a customer
      * 
      * @Route("/api/customers/{id}/users/{user_id}", name ="customer_user_details", methods={"GET"})
-     * 
+     * @return User
+     * @View(serializergroups={"SHOW_USER"})
      * @OA\Tag(name="User")
      * @Security(name="Bearer")
      * @OA\Parameter(
@@ -120,31 +138,32 @@ class UserController extends AbstractFOSRestController
      * @OA\Response(
      *     response=200,
      *     description="Return user details.",
-     *     @OA\JsonContent(ref=@Model(type=User::class))
+     *     @OA\JsonContent(ref=@Model(type=User::class, groups={"SHOW_USER"}))
      * )
      * @OA\Response(
      *     response=401,
      *     description="The JWT Token is invalid."
      * )
      * 
-     * * @OA\Response(
+     * @OA\Response(
      *     response=404,
      *     description="User not found."
      * )
      */
-    public function customer_user_details($id, $user_id, UserRepository $userRepository, CustomerRepository $customerRepository)
+    public function customer_user_details(Customer $customer = null, User $user = null)
     {
 
-        $user = $userRepository->findOneBy([
-            'id' => $user_id,
-            'customer' => $id
-        ]);
+        return $user;
+        // $user = $userRepository->findOneBy([
+        //     'id' => $user_id,
+        //     'customer' => $id
+        // ]);
 
-        if (!$user) {
-            return $this->json("User not found", 404, []);
-        }
+        // if (!$user) {
+        //     return $this->json("User not found", 404, []);
+        // }
 
-        return $this->json($user, 200, [], ['groups' => 'users:read']); 
+        // return $this->json($user, 200, [], ['groups' => 'users:read']); 
     }
 
     /**
@@ -153,6 +172,7 @@ class UserController extends AbstractFOSRestController
      * @Route("/api/customers/{id}/users", name="api_users_add", methods={"POST"})
      * 
      * @OA\Tag(name="User")
+     * @View(serializergroups={"SHOW_USER"})
      * @Security(name="Bearer")
      * @OA\Parameter(
      *     name="id",
@@ -188,7 +208,7 @@ class UserController extends AbstractFOSRestController
      * )
      * 
      * @OA\Response(
-     *     response=403,
+     *     response=404,
      *     description="Customer not found."
      * )
      */
@@ -221,7 +241,7 @@ class UserController extends AbstractFOSRestController
             $em->persist($user);
             $em->flush();
 
-            return $this->json($user, 201, [], ['groups' => 'users:read']);
+            return $this->json($user, 201, []);
         } catch (NotEncodableValueException $e) {
             return $this->json([
                 'status' => 400,
