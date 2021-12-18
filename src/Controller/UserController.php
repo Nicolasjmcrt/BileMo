@@ -2,11 +2,13 @@
 
 namespace App\Controller;
 
+use DateTime;
 use App\Entity\User;
 use App\Entity\Customer;
 use App\Representation\Users;
 use OpenApi\Annotations as OA;
 use App\Repository\UserRepository;
+use App\Exception\ForbiddenException;
 use App\Repository\ProductRepository;
 use App\Repository\CustomerRepository;
 use JMS\Serializer\SerializerInterface;
@@ -15,8 +17,9 @@ use FOS\RestBundle\Request\ParamFetcher;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use App\Exception\ResourceValidationException;
 use FOS\RestBundle\Controller\Annotations\Get;
+use Symfony\Component\HttpFoundation\Response;
 use FOS\RestBundle\Controller\Annotations\View;
 use Symfony\Component\Routing\Annotation\Route;
 use FOS\RestBundle\Request\ParamFetcherInterface;
@@ -25,6 +28,7 @@ use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -119,6 +123,8 @@ class UserController extends AbstractFOSRestController
      * Returns the user details of a customer
      * 
      * @Route("/api/customers/{id}/users/{user_id}", name ="customer_user_details", methods={"GET"})
+     * @ParamConverter("customer", options={"id"="id"})
+     * @ParamConverter("user", options={"id"="user_id"})
      * @return User
      * @View(serializergroups={"SHOW_USER"})
      * @OA\Tag(name="User")
@@ -149,11 +155,35 @@ class UserController extends AbstractFOSRestController
      *     response=404,
      *     description="User not found."
      * )
+     * 
+     * @OA\Response(
+     *     response=403,
+     *     description="Not authorized."
+     * )
      */
     public function customer_user_details(Customer $customer = null, User $user = null)
     {
 
+        
+        // dd ($user->getId());
+        // dd($user->getCustomer()->getId());
+
+        if ($user->getCustomer()->getId() != $this->getUser()->getId()) {
+            throw new ForbiddenException("Not authorized");
+        }
+        
+        // dd ($this->getUser()->getId());
+
+        if ($customer->getId() != $this->getUser()->getId()) {
+            throw new ForbiddenException("Not authorized");
+        }
+
+        if (!$user) {
+            throw new NotFoundHttpException("The user was not found");
+        }
         return $user;
+
+        
         // $user = $userRepository->findOneBy([
         //     'id' => $user_id,
         //     'customer' => $id
@@ -171,8 +201,10 @@ class UserController extends AbstractFOSRestController
      * 
      * @Route("/api/customers/{id}/users", name="api_users_add", methods={"POST"})
      * 
+     * @ParamConverter("user", converter="fos_rest.request_body")
+     * 
      * @OA\Tag(name="User")
-     * @View(serializergroups={"SHOW_USER"})
+     * @View
      * @Security(name="Bearer")
      * @OA\Parameter(
      *     name="id",
@@ -212,42 +244,65 @@ class UserController extends AbstractFOSRestController
      *     description="Customer not found."
      * )
      */
-    public function add($id, Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator, CustomerRepository $customerRepository)
+    public function add(User $user, Customer $customer = null, ValidatorInterface $validator)
     {
 
-        $jsonData = $request->getContent();
-
-        try {
-            $user = $serializer->deserialize($jsonData, User::class, 'json');
-
-            $password = $this->userPasswordHasher->hashPassword($user, 'password');
-            $user->setPassword($password);
-            $user->setCreationDate(new \DateTime());
-
-            $customer = $customerRepository->findOneBy([
-                'id' => $id
-            ]);
-            if (!$customer) {
-                return $this->json("Customer not found", 403, []);
-            }
-            $user->setCustomer($customer);
-
-            $errors = $validator->validate($user);
-
-            if (count($errors) > 0) {
-                return $this->json($errors, 400);
-            }
-
-            $em->persist($user);
-            $em->flush();
-
-            return $this->json($user, 201, []);
-        } catch (NotEncodableValueException $e) {
-            return $this->json([
-                'status' => 400,
-                'message' => $e->getMessage()
-            ], 400);
+        if (!$customer || $this->getUser()->getId() !== $customer->getId()) {
+            throw new ForbiddenException('Forbidden');
         }
+
+        // Ajout des variables manquantes
+        $password = $this->userPasswordHasher->hashPassword($user, 'password');
+
+        $user->setCustomer($customer);
+        $user->setCreationDate(new \DateTime());
+        $user->setPassword($password);
+
+        $errors = $validator->validate($user);
+            if (count($errors) > 0) {
+                throw new ResourceValidationException('invalid data');
+            }
+
+        // Enregistrement de l'utilisateur
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        return $this->View($user, 201);
+
+        // $jsonData = $request->getContent();
+
+        // try {
+        //     $user = $serializer->deserialize($jsonData, User::class, 'json');
+
+        //     $password = $this->userPasswordHasher->hashPassword($user, 'password');
+        //     $user->setPassword($password);
+        //     $user->setCreationDate(new \DateTime());
+
+        //     $customer = $customerRepository->findOneBy([
+        //         'id' => $id
+        //     ]);
+        //     if (!$customer) {
+        //         return $this->json("Customer not found", 403, []);
+        //     }
+        //     $user->setCustomer($customer);
+
+        //     $errors = $validator->validate($user);
+
+        //     if (count($errors) > 0) {
+        //         return $this->json($errors, 400);
+        //     }
+
+        //     $em->persist($user);
+        //     $em->flush();
+
+        //     return $this->json($user, 201, []);
+        // } catch (NotEncodableValueException $e) {
+        //     return $this->json([
+        //         'status' => 400,
+        //         'message' => $e->getMessage()
+        //     ], 400);
+        // }
     }
 
     /**
