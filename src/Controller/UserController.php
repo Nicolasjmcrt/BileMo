@@ -25,6 +25,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\Controller\Annotations\QueryParam;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
+use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -123,12 +124,15 @@ class UserController extends AbstractFOSRestController
      * Returns the user details of a customer
      * 
      * @Route("/api/customers/{id}/users/{user_id}", name ="customer_user_details", methods={"GET"})
+     * 
      * @ParamConverter("customer", options={"id"="id"})
      * @ParamConverter("user", options={"id"="user_id"})
+     * 
      * @return User
      * @View(serializergroups={"SHOW_USER"})
      * @OA\Tag(name="User")
      * @Security(name="Bearer")
+     * 
      * @OA\Parameter(
      *     name="id",
      *     in="path",
@@ -164,36 +168,20 @@ class UserController extends AbstractFOSRestController
     public function customer_user_details(Customer $customer = null, User $user = null)
     {
 
-        
-        // dd ($user->getId());
-        // dd($user->getCustomer()->getId());
+        if (!$user) {
+            throw new NotFoundHttpException("The user was not found");
+        }
 
         if ($user->getCustomer()->getId() != $this->getUser()->getId()) {
             throw new ForbiddenException("Not authorized");
         }
-        
-        // dd ($this->getUser()->getId());
 
         if ($customer->getId() != $this->getUser()->getId()) {
             throw new ForbiddenException("Not authorized");
         }
 
-        if (!$user) {
-            throw new NotFoundHttpException("The user was not found");
-        }
-        return $user;
-
         
-        // $user = $userRepository->findOneBy([
-        //     'id' => $user_id,
-        //     'customer' => $id
-        // ]);
-
-        // if (!$user) {
-        //     return $this->json("User not found", 404, []);
-        // }
-
-        // return $this->json($user, 200, [], ['groups' => 'users:read']); 
+        return $user;
     }
 
     /**
@@ -208,7 +196,7 @@ class UserController extends AbstractFOSRestController
      * @Security(name="Bearer")
      * @OA\Parameter(
      *     name="id",
-     *     in="query",
+     *     in="path",
      *     @OA\Schema(type="integer")
      * )
      * 
@@ -244,7 +232,7 @@ class UserController extends AbstractFOSRestController
      *     description="Customer not found."
      * )
      */
-    public function add(User $user, Customer $customer = null, ValidatorInterface $validator)
+    public function add(User $user, Customer $customer = null, ConstraintViolationList $violations)
     {
 
         if (!$customer || $this->getUser()->getId() !== $customer->getId()) {
@@ -258,8 +246,7 @@ class UserController extends AbstractFOSRestController
         $user->setCreationDate(new \DateTime());
         $user->setPassword($password);
 
-        $errors = $validator->validate($user);
-            if (count($errors) > 0) {
+            if (count($violations) > 0) {
                 throw new ResourceValidationException('invalid data');
             }
 
@@ -270,45 +257,15 @@ class UserController extends AbstractFOSRestController
 
         return $this->View($user, 201);
 
-        // $jsonData = $request->getContent();
-
-        // try {
-        //     $user = $serializer->deserialize($jsonData, User::class, 'json');
-
-        //     $password = $this->userPasswordHasher->hashPassword($user, 'password');
-        //     $user->setPassword($password);
-        //     $user->setCreationDate(new \DateTime());
-
-        //     $customer = $customerRepository->findOneBy([
-        //         'id' => $id
-        //     ]);
-        //     if (!$customer) {
-        //         return $this->json("Customer not found", 403, []);
-        //     }
-        //     $user->setCustomer($customer);
-
-        //     $errors = $validator->validate($user);
-
-        //     if (count($errors) > 0) {
-        //         return $this->json($errors, 400);
-        //     }
-
-        //     $em->persist($user);
-        //     $em->flush();
-
-        //     return $this->json($user, 201, []);
-        // } catch (NotEncodableValueException $e) {
-        //     return $this->json([
-        //         'status' => 400,
-        //         'message' => $e->getMessage()
-        //     ], 400);
-        // }
     }
 
     /**
      * Removes a user from a customer
      * 
      * @Route("/api/customers/{id}/users/{user_id}", name="delete_user", methods={"DELETE"})
+     * 
+     * @ParamConverter("customer", options={"id"="id"})
+     * @ParamConverter("user", options={"id"="user_id"})
      * 
      * @OA\Tag(name="User")
      * @Security(name="Bearer")
@@ -338,23 +295,30 @@ class UserController extends AbstractFOSRestController
      *     response=404,
      *     description="Customer not found."
      * )
+     * 
+     * @OA\Response(
+     *     response=403,
+     *     description="Not authorized."
+     * )
      */
-    public function delete($id, $user_id, UserRepository $userRepository, EntityManagerInterface $em)
+    public function delete(Customer $customer = null, User $user = null)
     {
-        $user = $userRepository->findOneBy([
-            'id' => $user_id,
-            'customer' => $id
-        ]);
-
-        if (!$id) {
-            return $this->json("Customer not found", 404, []);
+        if (!$user) {
+            throw new NotFoundHttpException("The user was not found");
         }
 
-        if ($user) {
-            $em->remove($user);
-            $em->flush();
+        if ($user->getCustomer()->getId() != $this->getUser()->getId()) {
+            throw new ForbiddenException("Not authorized");
         }
 
-        return $this->json($user, 204, [], ['groups' => 'users:read']); 
+        if ($customer->getId() != $this->getUser()->getId()) {
+            throw new ForbiddenException("Not authorized");
+        }
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->remove($user);
+        $entityManager->flush();
+
+        return $this->json([], 204); 
     }
 }
