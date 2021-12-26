@@ -2,11 +2,32 @@
 
 namespace App\Entity;
 
-use App\Repository\ProductRepository;
+use JMS\Serializer\Annotation as Serializer;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\ProductRepository;
+use Hateoas\Configuration\Annotation as Hateoas;
 
 /**
  * @ORM\Entity(repositoryClass=ProductRepository::class)
+ * @Hateoas\Relation(
+ *      name = "self",
+ *      href = @Hateoas\Route(
+ *          "show_product",
+ *          parameters = { "id" = "expr(object.getId())" },
+ *          absolute = true
+ *      ),
+ *      attributes = {"actions": { "read": "GET" }},
+ *      exclusion = @Hateoas\Exclusion(groups={"SHOW_PRODUCT", "LIST_PRODUCT"})
+ * )
+ * @Hateoas\Relation(
+ *      name = "all",
+ *      href = @Hateoas\Route(
+ *          "products",
+ *          absolute = true
+ *      ),
+ *      attributes = {"actions": { "read": "GET" }},
+ *      exclusion = @Hateoas\Exclusion(groups={"SHOW_PRODUCT"})
+ * )
  */
 class Product
 {
@@ -14,21 +35,25 @@ class Product
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Serializer\Groups({"SHOW_PRODUCT", "LIST_PRODUCT"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Serializer\Groups({"SHOW_PRODUCT", "LIST_PRODUCT"})
      */
     private $name;
 
     /**
      * @ORM\Column(type="text")
+     * @Serializer\Groups({"SHOW_PRODUCT"})
      */
     private $description;
 
     /**
      * @ORM\Column(type="decimal", scale=2, precision=11)
+     * @Serializer\Groups({"SHOW_PRODUCT"})
      */
     private $price;
 
@@ -39,16 +64,19 @@ class Product
 
     /**
      * @ORM\Column(type="integer")
+     * @Serializer\Groups({"SHOW_PRODUCT"})
      */
     private $quantity;
 
     /**
      * @ORM\Column(type="decimal", precision=5, scale=2)
+     * @Serializer\Groups({"SHOW_PRODUCT"})
      */
     private $vat;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Serializer\Groups({"SHOW_PRODUCT"})
      */
     private $reference;
 

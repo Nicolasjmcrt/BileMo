@@ -5,22 +5,26 @@ namespace App\Controller;
 use App\Entity\Product;
 use OpenApi\Annotations as OA;
 use App\Repository\ProductRepository;
+use JMS\Serializer\SerializerInterface;
 use FOS\RestBundle\Request\ParamFetcher;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations\Get;
+use Symfony\Component\HttpFoundation\Response;
 use FOS\RestBundle\Controller\Annotations\View;
 use Symfony\Component\Routing\Annotation\Route;
 use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\Controller\Annotations\QueryParam;
-use Symfony\Component\Serializer\SerializerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use App\Representation\Products;
 
 class ProductController extends AbstractFOSRestController
 {
 
+    
    /**
      * Return products list
      *
@@ -39,6 +43,7 @@ class ProductController extends AbstractFOSRestController
      *     description="Maximum product per page."
      * )
      *
+     * @View(serializergroups={"LIST_PRODUCT"})
      * @OA\Tag(name="Product")
      * @Security(name="Bearer")
      * @OA\Parameter(
@@ -56,7 +61,7 @@ class ProductController extends AbstractFOSRestController
      *     description="Return the list of the products.",
      *     @OA\JsonContent(
      *         type="array",
-     *         @OA\Items(ref=@Model(type=Product::class))
+     *         @OA\Items(ref=@Model(type=Product::class, groups={"LIST_PRODUCT"}))
      *     )
      * )
      * @OA\Response(
@@ -68,12 +73,18 @@ class ProductController extends AbstractFOSRestController
     {
         $offset = $paramFetcher->get('offset');
         $limit = $paramFetcher->get('limit');
-        return $this->json($productRepository->findBy([],['name' => 'ASC'], $limit, $offset), 200, []);
+
+        $products = $productRepository->findBy([],['name' => 'ASC'], $limit, $offset);
+
+        return new Products($products);
     }
 
     /**
+     * Returns the details of a product
+     * 
      * @Route("/api/products/{id}", name="show_product", methods={"GET"})
      *
+     * @View(serializergroups={"SHOW_PRODUCT"})
      * @OA\Tag(name="Product")
      * @Security(name="Bearer")
      * @OA\Parameter(
@@ -85,7 +96,7 @@ class ProductController extends AbstractFOSRestController
      * @OA\Response(
      *     response=200,
      *     description="Product detail",
-     *     @OA\JsonContent(ref=@Model(type=Product::class)),
+     *     @OA\JsonContent(ref=@Model(type=Product::class, groups={"SHOW_PRODUCT"})),
      * )
      * @OA\Response(
      *     response=401,
@@ -96,13 +107,11 @@ class ProductController extends AbstractFOSRestController
      *     description="The product was not found."
      * )
      */
-    public function show($id, ProductRepository $productRepository)
+    public function show(Product $product = null)
     {
-        $product = $productRepository->findOneBy(['id' => $id]);
-
-        if ($product) {
-            return $this->json($product, 200, []);
+        if (!$product) {
+            throw new NotFoundHttpException("The product was not found");
         }
-        return $this->json("Product not found", 404, []);
+        return $product;
     }
 }
